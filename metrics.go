@@ -15,5 +15,5 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 func (cfg *apiConfig) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprint(cfg.fileserverHits)))
+	w.Write([]byte(fmt.Sprintf("Hits: %v", cfg.fileserverHits)))
 }
