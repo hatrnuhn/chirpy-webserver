@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/go-chi/chi"
 )
 
 type apiConfig struct {
@@ -10,9 +12,10 @@ type apiConfig struct {
 }
 
 func main() {
-	srvMux := http.NewServeMux()
+	rChi := chi.NewRouter()
+	rAPI := chi.NewRouter()
 
-	corsSrvMux := middlewareCors(srvMux)
+	corsSrvMux := middlewareCors(rChi)
 
 	s := &http.Server{
 		Addr:    "localhost:8080",
@@ -34,11 +37,17 @@ func main() {
 	// request and look for the file directly under the
 	// http.Dir() directory.
 
-	srvMux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
+	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir("."))))
+	rChi.Handle("/app/*", fsHandler)
+	rChi.Handle("/app", fsHandler)
 
-	srvMux.HandleFunc("/metrics", apiCfg.handleMetrics)
+	rAPI.Get("/metrics", apiCfg.handleMetrics)
+	rAPI.Get("/healthz", handleHealthz)
+	rAPI.HandleFunc("/reset", apiCfg.handleReset)
 
-	srvMux.HandleFunc("/healthz", handleHealthz)
+	// mount rAPI to /api/* pattern
+	rChi.Mount("/api", rAPI)
+
 	fmt.Printf("Starting server at http://%v\n", s.Addr)
 	s.ListenAndServe()
 }
