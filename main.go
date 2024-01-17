@@ -14,6 +14,7 @@ type apiConfig struct {
 func main() {
 	rChi := chi.NewRouter()
 	rAPI := chi.NewRouter()
+	rAdmin := chi.NewRouter()
 
 	corsSrvMux := middlewareCors(rChi)
 
@@ -41,12 +42,14 @@ func main() {
 	rChi.Handle("/app/*", fsHandler)
 	rChi.Handle("/app", fsHandler)
 
-	rAPI.Get("/metrics", apiCfg.handleMetrics)
 	rAPI.Get("/healthz", handleHealthz)
 	rAPI.HandleFunc("/reset", apiCfg.handleReset)
 
-	// mount rAPI to /api/* pattern
+	rAdmin.Get("/metrics", apiCfg.handleMetrics)
+
+	// mount namespaces routers to /api
 	rChi.Mount("/api", rAPI)
+	rChi.Mount("/admin", rAdmin)
 
 	fmt.Printf("Starting server at http://%v\n", s.Addr)
 	s.ListenAndServe()
