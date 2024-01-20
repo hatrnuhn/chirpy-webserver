@@ -44,7 +44,8 @@ func main() {
 
 	rAPI.Get("/healthz", handleHealthz)
 	rAPI.HandleFunc("/reset", apiCfg.handleReset)
-	rAPI.Post("/validate_chirp", handleValidateChirp)
+	rAPI.Post("/chirps", handlePostChirps)
+	rAPI.Get("/chirps", handleGetChirps)
 
 	rAdmin.Get("/metrics", apiCfg.handleMetrics)
 
