@@ -47,6 +47,7 @@ func main() {
 
 	rAPI.Post("/chirps", handlePostChirps)
 	rAPI.Get("/chirps", handleGetChirps)
+	rAPI.Post("/users", handlePostUsers)
 
 	rAPI.Get("/chirps/{chirpID}", handleChirpID)
 

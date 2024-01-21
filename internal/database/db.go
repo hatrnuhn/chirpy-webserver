@@ -110,6 +110,7 @@ func (db *DB) loadDB() (DBStructure, error) {
 		}
 	} else {
 		dbS.Chirps = make(map[int]Chirp)
+		dbS.Users = make(map[int]User)
 	}
 
 	return dbS, nil
@@ -128,4 +129,36 @@ func (db *DB) writeDB(dbStructure DBStructure) error {
 	}
 
 	return nil
+}
+
+// creates a new user and saves it to disk
+func (db *DB) CreateUser(addr string) (User, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
+
+	dbS, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+
+	id := len(dbS.Users) + 1
+
+	req := User{}
+	err = json.Unmarshal([]byte(addr), &req)
+	if err != nil {
+		return User{}, errors.New("unmarshall error")
+	}
+
+	u := User{
+		ID:    id,
+		Email: req.Email,
+	}
+
+	dbS.Users[id] = u
+	err = db.writeDB(dbS)
+	if err != nil {
+		return User{}, errors.New("writeDB error")
+	}
+
+	return u, nil
 }
