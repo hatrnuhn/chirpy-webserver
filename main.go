@@ -1,8 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 )
@@ -12,6 +15,12 @@ type apiConfig struct {
 }
 
 func main() {
+	dbg := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+	if *dbg {
+		deleteDB()
+	}
+
 	rChi := chi.NewRouter()
 	rAPI := chi.NewRouter()
 	rAdmin := chi.NewRouter()
@@ -72,4 +81,12 @@ func middlewareCors(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func deleteDB() {
+	err := os.Remove("internal/database/database.json")
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
