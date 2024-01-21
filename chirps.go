@@ -21,7 +21,7 @@ func handlePostChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := database.ChirpReq{}
+	req := database.Chirp{}
 	err = json.Unmarshal(dat, &req)
 	if err != nil {
 		respondWithError(w, 500, "couldn't unmarshal request")

@@ -36,7 +36,7 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 
 	id := len(dbS.Chirps) + 1
 
-	req := ChirpReq{}
+	req := Chirp{}
 	err = json.Unmarshal([]byte(body), &req)
 	if err != nil {
 		return Chirp{}, errors.New("unmarshall error")
