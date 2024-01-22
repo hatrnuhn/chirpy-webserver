@@ -1,3 +1,7 @@
 # github.com/go-chi/chi v1.5.5
 ## explicit; go 1.16
 github.com/go-chi/chi
+# golang.org/x/crypto v0.18.0
+## explicit; go 1.18
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish

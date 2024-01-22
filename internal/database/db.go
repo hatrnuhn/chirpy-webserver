@@ -6,6 +6,8 @@ import (
 	"os"
 	"sort"
 	"sync"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // NewDB creates a new database connection
@@ -132,7 +134,7 @@ func (db *DB) writeDB(dbStructure DBStructure) error {
 }
 
 // creates a new user and saves it to disk
-func (db *DB) CreateUser(addr string) (User, error) {
+func (db *DB) CreateUser(body string) (User, error) {
 	db.mux.Lock()
 	defer db.mux.Unlock()
 
@@ -144,14 +146,20 @@ func (db *DB) CreateUser(addr string) (User, error) {
 	id := len(dbS.Users) + 1
 
 	req := User{}
-	err = json.Unmarshal([]byte(addr), &req)
+	err = json.Unmarshal([]byte(body), &req)
 	if err != nil {
 		return User{}, errors.New("unmarshall error")
 	}
 
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return User{}, err
+	}
+
 	u := User{
-		ID:    id,
-		Email: req.Email,
+		ID:       id,
+		Email:    req.Email,
+		Password: string(hash),
 	}
 
 	dbS.Users[id] = u
