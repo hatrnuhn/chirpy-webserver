@@ -17,7 +17,10 @@ func handlePostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := database.User{}
+	req := struct {
+		ID    int
+		Email string
+	}{}
 	err = json.Unmarshal(dat, &req)
 	if err != nil {
 		respondWithError(w, 500, "couldn't unmarshal request")
@@ -42,5 +45,7 @@ func handlePostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, 201, newU)
+	req.ID = newU.ID
+
+	respondWithJSON(w, 201, req)
 }
