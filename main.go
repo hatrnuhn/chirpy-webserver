@@ -60,6 +60,8 @@ func main() {
 
 	rAPI.Get("/chirps/{chirpID}", handleChirpID)
 
+	rAPI.Post("/login", handleLogin)
+
 	rAdmin.Get("/metrics", apiCfg.handleMetrics)
 
 	// mount namespaces routers to /api

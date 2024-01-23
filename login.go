@@ -6,9 +6,10 @@ import (
 	"net/http"
 
 	"github.com/hatrnuhn/rssagg/internal/database"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func handlePostUsers(w http.ResponseWriter, r *http.Request) {
+func handleLogin(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	dat, err := io.ReadAll(r.Body)
@@ -18,17 +19,13 @@ func handlePostUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := struct {
-		ID    int    `json:"id"`
-		Email string `json:"email"`
+		Email    string
+		Password string
 	}{}
+
 	err = json.Unmarshal(dat, &req)
 	if err != nil {
-		respondWithError(w, 500, "couldn't unmarshal request")
-		return
-	}
-
-	if len(req.Email) > 140 {
-		respondWithError(w, 400, "email address is too long!")
+		respondWithError(w, 400, "couldn't unmarshal request")
 		return
 	}
 
@@ -45,20 +42,33 @@ func handlePostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var user database.User
+	found := false
+
 	for _, u := range users {
 		if req.Email == u.Email {
-			respondWithError(w, 400, "email is already registered")
-			return
+			user = u
+			found = true
+			break
 		}
 	}
 
-	newU, err := db.CreateUser(string(dat))
-	if err != nil {
-		respondWithError(w, 500, "couldn't create user")
+	if !found {
+		respondWithError(w, 400, "couldn't not find user with such email")
 		return
 	}
 
-	req.ID = newU.ID
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		respondWithError(w, 401, "password doesn't not match!")
+		return
+	}
 
-	respondWithJSON(w, 201, req)
+	respondWithJSON(w, 200, struct {
+		ID    int    `json:"id"`
+		Email string `json:"email"`
+	}{
+		ID:    user.ID,
+		Email: user.Email,
+	})
 }
