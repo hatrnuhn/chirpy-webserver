@@ -148,7 +148,7 @@ func (db *DB) CreateUser(body string) (User, error) {
 	req := User{}
 	err = json.Unmarshal([]byte(body), &req)
 	if err != nil {
-		return User{}, errors.New("unmarshall error")
+		return User{}, errors.New("CreatUser: unmarshall error")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -165,8 +165,29 @@ func (db *DB) CreateUser(body string) (User, error) {
 	dbS.Users[id] = u
 	err = db.writeDB(dbS)
 	if err != nil {
-		return User{}, errors.New("writeDB error")
+		return User{}, errors.New("CreateUser: writeDB error")
 	}
 
 	return u, nil
+}
+
+func (db *DB) GetUsers() ([]User, error) {
+	db.mux.RLock()
+	defer db.mux.RUnlock()
+
+	dbS, err := db.loadDB()
+	if err != nil {
+		return nil, err
+	}
+
+	users := []User{}
+	for _, user := range dbS.Users {
+		users = append(users, user)
+	}
+
+	sort.Slice(users, func(i, j int) bool {
+		return users[i].ID < users[j].ID
+	})
+
+	return users, nil
 }

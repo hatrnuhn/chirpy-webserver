@@ -39,6 +39,19 @@ func handlePostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	users, err := db.GetUsers()
+	if err != nil {
+		respondWithError(w, 500, "couldn't get users")
+		return
+	}
+
+	for _, u := range users {
+		if req.Email == u.Email {
+			respondWithError(w, 400, "email is already registered")
+			return
+		}
+	}
+
 	newU, err := db.CreateUser(string(dat))
 	if err != nil {
 		respondWithError(w, 500, "couldn't create user")
