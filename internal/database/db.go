@@ -68,7 +68,7 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 		return nil, err
 	}
 
-	chirps := []Chirp{}
+	chirps := make([]Chirp, len(dbS.Chirps))
 	for _, chirp := range dbS.Chirps {
 		chirps = append(chirps, chirp)
 	}
@@ -180,7 +180,7 @@ func (db *DB) GetUsers() ([]User, error) {
 		return nil, err
 	}
 
-	users := []User{}
+	users := make([]User, len(dbS.Users))
 	for _, user := range dbS.Users {
 		users = append(users, user)
 	}
@@ -190,4 +190,31 @@ func (db *DB) GetUsers() ([]User, error) {
 	})
 
 	return users, nil
+}
+
+func (db *DB) UpdateUser(user *User) (User, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
+
+	id := user.ID
+
+	dbS, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return User{}, err
+	}
+
+	user.Password = string(hash)
+
+	dbS.Users[id] = *user
+	err = db.writeDB(dbS)
+	if err != nil {
+		return User{}, errors.New("UpdateUser: writeDB error")
+	}
+
+	return *user, nil
 }

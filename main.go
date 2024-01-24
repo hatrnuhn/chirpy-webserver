@@ -8,13 +8,20 @@ import (
 	"os"
 
 	"github.com/go-chi/chi"
+	"github.com/hatrnuhn/rssagg/internal/database"
+	"github.com/joho/godotenv"
 )
 
 type apiConfig struct {
 	fileserverHits int
+	jwtSecret      string
+	db             *database.DB
 }
 
 func main() {
+	godotenv.Load()
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	dbg := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 	if *dbg {
@@ -34,18 +41,15 @@ func main() {
 
 	apiCfg := apiConfig{
 		fileserverHits: 0,
+		jwtSecret:      jwtSecret,
 	}
 
-	// If the handle path was "/app" instead of "/app/",
-	// the server would only respond to exactly "/app", not
-	// any subpaths like "/app/test.txt". Adding the
-	// trailing slash allows the handler to match all paths
-	// that start with "/app/", including "/app/" itself.
+	var err error
 
-	// Then, by using http.StripPrefix, you're telling the
-	// file server to ignore the "/app" prefix in the URL
-	// request and look for the file directly under the
-	// http.Dir() directory.
+	apiCfg.db, err = database.NewDB(os.Getenv("DBPATH"))
+	if err != nil {
+		log.Fatal("couldn't initialize database")
+	}
 
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir("."))))
 	rChi.Handle("/app/*", fsHandler)
@@ -54,13 +58,14 @@ func main() {
 	rAPI.Get("/healthz", handleHealthz)
 	rAPI.HandleFunc("/reset", apiCfg.handleReset)
 
-	rAPI.Post("/chirps", handlePostChirps)
-	rAPI.Get("/chirps", handleGetChirps)
-	rAPI.Post("/users", handlePostUsers)
+	rAPI.Post("/chirps", apiCfg.handlePostChirps)
+	rAPI.Get("/chirps", apiCfg.handleGetChirps)
+	rAPI.Post("/users", apiCfg.handlePostUsers)
+	rAPI.Put("/users", apiCfg.handlePutUsers)
 
-	rAPI.Get("/chirps/{chirpID}", handleChirpID)
+	rAPI.Get("/chirps/{chirpID}", apiCfg.handleChirpID)
 
-	rAPI.Post("/login", handleLogin)
+	rAPI.Post("/login", apiCfg.handlePostLogin)
 
 	rAdmin.Get("/metrics", apiCfg.handleMetrics)
 

@@ -12,7 +12,7 @@ import (
 )
 
 // accepts and store a chirp POST and responds with a newly stored chirp
-func handlePostChirps(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	dat, err := io.ReadAll(r.Body)
@@ -33,14 +33,7 @@ func handlePostChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := "internal/database/database.json"
-	db, err := database.NewDB(path)
-	if err != nil {
-		respondWithError(w, 500, "couldn't initialize database")
-		return
-	}
-
-	newC, err := db.CreateChirp(string(dat))
+	newC, err := cfg.db.CreateChirp(string(dat))
 	if err != nil {
 		respondWithError(w, 500, "couldn't create chirp")
 		return
@@ -50,15 +43,8 @@ func handlePostChirps(w http.ResponseWriter, r *http.Request) {
 }
 
 // responds with all chirps stored in database
-func handleGetChirps(w http.ResponseWriter, r *http.Request) {
-	path := "internal/database/database.json"
-	db, err := database.NewDB(path)
-	if err != nil {
-		respondWithError(w, 500, "couldn't initialize database")
-		return
-	}
-
-	chirps, err := db.GetChirps()
+func (cfg *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
+	chirps, err := cfg.db.GetChirps()
 	if err != nil {
 		respondWithError(w, 500, "couldn't get chirps")
 		return
@@ -68,7 +54,7 @@ func handleGetChirps(w http.ResponseWriter, r *http.Request) {
 }
 
 // handles /chirps/{chirpID} endpoints
-func handleChirpID(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleChirpID(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "chirpID")
 	id, err := strconv.Atoi(param)
 	if err != nil {
@@ -80,15 +66,7 @@ func handleChirpID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := "internal/database/database.json"
-
-	db, err := database.NewDB(path)
-	if err != nil {
-		respondWithError(w, 500, "couldn't initialize database")
-		return
-	}
-
-	cps, err := db.GetChirps()
+	cps, err := cfg.db.GetChirps()
 	if err != nil {
 		respondWithError(w, 500, "couldn't get chirps")
 		return
