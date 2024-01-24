@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/hatrnuhn/rssagg/internal/database"
@@ -83,17 +82,12 @@ func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok {
-		if time.Now().Unix() > claims.ExpiresAt.Unix() {
-			respondWithError(w, http.StatusUnauthorized, "token is expired")
-			return
-		}
-
 		dat, err := io.ReadAll(r.Body)
-		defer r.Body.Close()
 		if err != nil {
 			respondWithError(w, 500, "couldn't read request")
 			return
 		}
+		defer r.Body.Close()
 
 		req := database.User{}
 		err = json.Unmarshal(dat, &req)
@@ -105,6 +99,18 @@ func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 		if len(req.Email) > 140 {
 			respondWithError(w, 400, "email address is too long!")
 			return
+		}
+
+		users, err := cfg.db.GetUsers()
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "couldn't get users")
+		}
+
+		for _, u := range users {
+			if u.Email == req.Email {
+				respondWithError(w, http.StatusBadRequest, "email already exists")
+				return
+			}
 		}
 
 		id, err := strconv.Atoi(claims.Subject)
