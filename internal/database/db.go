@@ -113,6 +113,7 @@ func (db *DB) loadDB() (DBStructure, error) {
 	} else {
 		dbS.Chirps = make(map[int]Chirp)
 		dbS.Users = make(map[int]User)
+		dbS.Tokens = make(map[string]int64)
 	}
 
 	return dbS, nil
@@ -217,4 +218,36 @@ func (db *DB) UpdateUser(user *User) (User, error) {
 	}
 
 	return *user, nil
+}
+
+func (db *DB) RJWTNotExp(rt string) (bool, error) {
+	dbs, err := db.loadDB()
+	if err != nil {
+		return false, err
+	}
+
+	revokedTime, ok := dbs.Tokens[rt]
+	if revokedTime != 0 {
+		return !ok, nil
+	}
+
+	return ok, nil
+}
+
+func (db *DB) WriteRefreshToken(jwtString string, time int64) (string, error) {
+	db.mux.Lock()
+	defer db.mux.Unlock()
+
+	dbS, err := db.loadDB()
+	if err != nil {
+		return "", err
+	}
+
+	dbS.Tokens[jwtString] = time
+	err = db.writeDB(dbS)
+	if err != nil {
+		return "", errors.New("CreateUser: writeDB error")
+	}
+
+	return jwtString, nil
 }

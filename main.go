@@ -56,16 +56,17 @@ func main() {
 	rChi.Handle("/app", fsHandler)
 
 	rAPI.Get("/healthz", handleHealthz)
+
 	rAPI.HandleFunc("/reset", apiCfg.handleReset)
 
 	rAPI.Post("/chirps", apiCfg.handlePostChirps)
 	rAPI.Get("/chirps", apiCfg.handleGetChirps)
 	rAPI.Post("/users", apiCfg.handlePostUsers)
 	rAPI.Put("/users", apiCfg.handlePutUsers)
-
 	rAPI.Get("/chirps/{chirpID}", apiCfg.handleChirpID)
-
 	rAPI.Post("/login", apiCfg.handlePostLogin)
+	rAPI.Post("/refresh", apiCfg.handlePostRefresh)
+	rAPI.Post("/revoke", apiCfg.handlePostRevoke)
 
 	rAdmin.Get("/metrics", apiCfg.handleMetrics)
 

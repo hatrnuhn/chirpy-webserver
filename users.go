@@ -13,8 +13,9 @@ import (
 )
 
 func (cfg *apiConfig) handlePostUsers(w http.ResponseWriter, r *http.Request) {
-	dat, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
+
+	dat, err := io.ReadAll(r.Body)
 	if err != nil {
 		respondWithError(w, 500, "couldn't read request")
 		return
@@ -60,6 +61,8 @@ func (cfg *apiConfig) handlePostUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
 	authHead := r.Header.Get("Authorization")
 	if !strings.HasPrefix(authHead, "Bearer ") {
 		respondWithError(w, 401, "invalid auth header")
@@ -82,28 +85,36 @@ func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok {
-		dat, err := io.ReadAll(r.Body)
-		if err != nil {
-			respondWithError(w, 500, "couldn't read request")
+		if claims.Issuer != "chirpy-access" {
+			respondWithError(w, http.StatusUnauthorized, "invalid AJWT")
 			return
 		}
-		defer r.Body.Close()
 
+		if !ok {
+			respondWithError(w, http.StatusUnauthorized, "refresh token is expired")
+			return
+		}
+
+		dat, err := io.ReadAll(r.Body)
+		if err != nil {
+			respondWithError(w, 500, fmt.Sprintf("couldn't read request: %s", err.Error()))
+			return
+		}
 		req := database.User{}
 		err = json.Unmarshal(dat, &req)
 		if err != nil {
-			respondWithError(w, 500, "couldn't unmarshal request")
+			respondWithError(w, http.StatusBadRequest, fmt.Sprintf("couldn't unmarshal request: %s", err.Error()))
 			return
 		}
 
 		if len(req.Email) > 140 {
-			respondWithError(w, 400, "email address is too long!")
+			respondWithError(w, http.StatusBadRequest, "email address is too long!")
 			return
 		}
 
 		users, err := cfg.db.GetUsers()
 		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "couldn't get users")
+			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("couldn't get users: %s", err.Error()))
 		}
 
 		for _, u := range users {
@@ -115,7 +126,7 @@ func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 
 		id, err := strconv.Atoi(claims.Subject)
 		if err != nil {
-			respondWithJSON(w, 500, "couldn't get id")
+			respondWithJSON(w, http.StatusBadRequest, "couldn't get id")
 			return
 		}
 
@@ -123,7 +134,7 @@ func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := cfg.db.UpdateUser(&req)
 		if err != nil {
-			respondWithError(w, 401, "couldn't update user")
+			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("couldn't update : %s", err.Error()))
 			return
 		}
 		respondWithJSON(w, http.StatusOK, struct {
@@ -135,7 +146,7 @@ func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	} else {
-		respondWithError(w, http.StatusUnauthorized, "invalid JTW token")
+		respondWithError(w, http.StatusUnauthorized, "invalid AJWT token")
 		return
 	}
 }
