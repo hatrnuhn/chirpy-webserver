@@ -16,9 +16,8 @@ type DBStructure struct {
 }
 
 type Chirp struct {
-	ID       int    `json:"id"`
-	Body     string `json:"body"`
-	AuthorId int    `json:"author_id"`
+	ID   int    `json:"id"`
+	Body string `json:"body"`
 }
 
 type User struct {
