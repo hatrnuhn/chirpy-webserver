@@ -11,6 +11,11 @@ import (
 	"github.com/hatrnuhn/rssagg/internal/database"
 )
 
+// TODO: create a handleFunc that handles GET to /api/chirps
+//
+
+// TODO: only allows users create chirps as long as they're authenticated
+// TODO: associates new chirps to users who created them
 // accepts and store a chirp POST and responds with a newly stored chirp
 func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
