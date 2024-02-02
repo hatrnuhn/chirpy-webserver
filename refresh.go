@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/hatrnuhn/rssagg/internal/auth"
@@ -12,24 +11,7 @@ import (
 
 // refreshes access token using refresh token
 func (cfg *apiConfig) handlePostRefresh(w http.ResponseWriter, r *http.Request) {
-	// reads rToken from Header
-	authHead := r.Header.Get("Authorization")
-	if !strings.HasPrefix(authHead, "Bearer ") {
-		respondWithError(w, 401, "invalid auth header")
-		return
-	}
-
-	rTokenString := strings.TrimPrefix(authHead, "Bearer ")
-
-	// parses rTokenString
-	rToken, err := jwt.ParseWithClaims(rTokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return []byte(cfg.jwtSecret), nil
-	})
-
+	rToken, err := auth.ParseReq(r, cfg.jwtSecret)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, err.Error())
 		return
@@ -43,7 +25,7 @@ func (cfg *apiConfig) handlePostRefresh(w http.ResponseWriter, r *http.Request) 
 		}
 
 		// verifs RJWT expiration
-		isNotExp, err := cfg.db.RJWTNotExp(rTokenString)
+		isNotExp, err := cfg.db.RJWTNotExp(rToken.Raw)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("couldn't verify RJWT expiration status: %s", err.Error()))
 			return

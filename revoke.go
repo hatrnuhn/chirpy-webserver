@@ -3,30 +3,15 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/hatrnuhn/rssagg/internal/auth"
 )
 
 func (cfg *apiConfig) handlePostRevoke(w http.ResponseWriter, r *http.Request) {
 	// reads rToken from Header
-	authHead := r.Header.Get("Authorization")
-	if !strings.HasPrefix(authHead, "Bearer ") {
-		respondWithError(w, 401, "invalid auth header")
-		return
-	}
-
-	rTokenString := strings.TrimPrefix(authHead, "Bearer ")
-
-	// parses rTokenString
-	rToken, err := jwt.ParseWithClaims(rTokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return []byte(cfg.jwtSecret), nil
-	})
+	rToken, err := auth.ParseReq(r, cfg.jwtSecret)
 
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, err.Error())
@@ -41,7 +26,7 @@ func (cfg *apiConfig) handlePostRevoke(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// verifs RJWT expiration
-		isNotExp, err := cfg.db.RJWTNotExp(rTokenString)
+		isNotExp, err := cfg.db.RJWTNotExp(rToken.Raw)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("couldn't verify RJWT expiration status: %s", err.Error()))
 			return
@@ -53,7 +38,7 @@ func (cfg *apiConfig) handlePostRevoke(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// updates tokens on db
-		_, err = cfg.db.WriteRefreshToken(rTokenString, time.Now().Unix())
+		_, err = cfg.db.WriteRefreshToken(rToken.Raw, time.Now().Unix())
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("couldn't write RJWT to db: %s", err.Error()))
 			return
