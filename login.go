@@ -77,11 +77,13 @@ func (cfg *apiConfig) handlePostLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = cfg.db.WriteAccessToken(aToken)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "couldn't write AJWT to db")
-		return
-	}
+	/*
+		_, err = cfg.db.WriteAccessToken(aToken)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "couldn't write AJWT to db")
+			return
+		}
+	*/
 
 	rToken, err := auth.CreateRefreshToken(userID, cfg.jwtSecret, int64(secsInMonth))
 	if err != nil {

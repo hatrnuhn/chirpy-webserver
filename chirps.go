@@ -26,6 +26,12 @@ func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// authentication check -----
+	// retrieve atoken from db
+
+	// check atoken validity
+	// use data from atoken to get userid and to associate new chirp
+
 	req := database.Chirp{}
 	err = json.Unmarshal(dat, &req)
 	if err != nil {

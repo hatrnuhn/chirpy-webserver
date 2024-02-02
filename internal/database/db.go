@@ -252,6 +252,7 @@ func (db *DB) WriteRefreshToken(jwtString string, time int64) (string, error) {
 	return jwtString, nil
 }
 
+/*
 func (db *DB) WriteAccessToken(jwtString string) (string, error) {
 	db.mux.Lock()
 	defer db.mux.Lock()
@@ -268,6 +269,7 @@ func (db *DB) WriteAccessToken(jwtString string) (string, error) {
 
 	return jwtString, nil
 }
+
 
 func (db *DB) DeleteAccessToken() (string, error) {
 	db.mux.Lock()
@@ -287,3 +289,18 @@ func (db *DB) DeleteAccessToken() (string, error) {
 
 	return deleted, nil
 }
+
+func (db *DB) GetAccessToken() (string, error) {
+	db.mux.RLock()
+	defer db.mux.RUnlock()
+
+	dbS, err := db.loadDB()
+	if err != nil {
+		return "", err
+	}
+
+	aTokenString := dbS.AToken
+
+	return aTokenString, nil
+}
+*/
