@@ -166,7 +166,7 @@ func (db *DB) CreateUser(body string) (User, error) {
 	dbS.Users[id] = u
 	err = db.writeDB(dbS)
 	if err != nil {
-		return User{}, errors.New("CreateUser: writeDB error")
+		return User{}, errors.New("couldn't write to db")
 	}
 
 	return u, nil
@@ -214,7 +214,7 @@ func (db *DB) UpdateUser(user *User) (User, error) {
 	dbS.Users[id] = *user
 	err = db.writeDB(dbS)
 	if err != nil {
-		return User{}, errors.New("UpdateUser: writeDB error")
+		return User{}, errors.New("couldn't write to db")
 	}
 
 	return *user, nil
@@ -246,8 +246,44 @@ func (db *DB) WriteRefreshToken(jwtString string, time int64) (string, error) {
 	dbS.Tokens[jwtString] = time
 	err = db.writeDB(dbS)
 	if err != nil {
-		return "", errors.New("CreateUser: writeDB error")
+		return "", errors.New("couldn't write to db")
 	}
 
 	return jwtString, nil
+}
+
+func (db *DB) WriteAccessToken(jwtString string) (string, error) {
+	db.mux.Lock()
+	defer db.mux.Lock()
+
+	dbS, err := db.loadDB()
+	if err != nil {
+		return "", err
+	}
+	dbS.AToken = jwtString
+	err = db.writeDB(dbS)
+	if err != nil {
+		return "", errors.New("couldn't write to db")
+	}
+
+	return jwtString, nil
+}
+
+func (db *DB) DeleteAccessToken() (string, error) {
+	db.mux.Lock()
+	defer db.mux.Lock()
+
+	dbS, err := db.loadDB()
+	if err != nil {
+		return "", err
+	}
+
+	deleted := dbS.AToken
+	dbS.AToken = ""
+	err = db.writeDB(dbS)
+	if err != nil {
+		return "", errors.New("couldn't write to db")
+	}
+
+	return deleted, nil
 }

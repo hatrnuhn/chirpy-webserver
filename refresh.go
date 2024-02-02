@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/hatrnuhn/rssagg/internal/auth"
 )
 
 // refreshes access token using refresh token
@@ -61,7 +62,7 @@ func (cfg *apiConfig) handlePostRefresh(w http.ResponseWriter, r *http.Request) 
 		}
 
 		secsInHour := 3600
-		aToken, err := createAccessToken(userId, cfg.jwtSecret, int64(secsInHour))
+		aToken, err := auth.CreateAccessToken(userId, cfg.jwtSecret, int64(secsInHour))
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("couldn't create AJWT: %s", err.Error()))
 			return

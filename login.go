@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/hatrnuhn/rssagg/internal/auth"
 	"github.com/hatrnuhn/rssagg/internal/database"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -73,13 +71,19 @@ func (cfg *apiConfig) handlePostLogin(w http.ResponseWriter, r *http.Request) {
 
 	secsInMonth := 24 * 3600 * 30
 
-	aToken, err := createAccessToken(userID, cfg.jwtSecret, int64(expiresInSecs))
+	aToken, err := auth.CreateAccessToken(userID, cfg.jwtSecret, int64(expiresInSecs))
 	if err != nil {
 		respondWithError(w, 500, fmt.Sprintf("couldn't create access token: %s", err.Error()))
 		return
 	}
 
-	rToken, err := createRefreshToken(userID, cfg.jwtSecret, int64(secsInMonth))
+	_, err = cfg.db.WriteAccessToken(aToken)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "couldn't write AJWT to db")
+		return
+	}
+
+	rToken, err := auth.CreateRefreshToken(userID, cfg.jwtSecret, int64(secsInMonth))
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("couldn't create refresh token: %s", err.Error()))
 		return
@@ -102,41 +106,4 @@ func (cfg *apiConfig) handlePostLogin(w http.ResponseWriter, r *http.Request) {
 		AToken: aToken,
 		RToken: rToken,
 	})
-}
-
-// creates access token, straightforward
-func createAccessToken(userID int, secretKey string, expiresInSeconds int64) (string, error) {
-	// Create the Claims
-	aClaims := &jwt.RegisteredClaims{
-		Issuer:    "chirpy-access",
-		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Duration(expiresInSeconds) * time.Second)),
-		Subject:   strconv.Itoa(userID), // Convert userID to string
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, aClaims)
-	ss, err := token.SignedString([]byte(secretKey))
-	if err != nil {
-		return "", err
-	}
-
-	return ss, nil
-}
-
-// creates refresh token, simple
-func createRefreshToken(userID int, secretKey string, expiresInSeconds int64) (string, error) {
-	rClaims := &jwt.RegisteredClaims{
-		Issuer:    "chirpy-refresh",
-		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Duration(expiresInSeconds) * time.Second)),
-		Subject:   strconv.Itoa(userID),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, rClaims)
-	ss, err := token.SignedString([]byte(secretKey))
-	if err != nil {
-		return "", err
-	}
-
-	return ss, nil
 }

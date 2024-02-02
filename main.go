@@ -16,6 +16,7 @@ type apiConfig struct {
 	fileserverHits int
 	jwtSecret      string
 	db             *database.DB
+	// auth           *auth.Authentication
 }
 
 func main() {
