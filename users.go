@@ -76,7 +76,7 @@ func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !ok {
-			respondWithError(w, http.StatusUnauthorized, "refresh token is expired")
+			respondWithError(w, http.StatusUnauthorized, "access token is expired")
 			return
 		}
 

@@ -27,7 +27,7 @@ func NewDB(path string) (*DB, error) {
 }
 
 // CreateChirp creates a new chirp and saves it to disk
-func (db *DB) CreateChirp(body string) (Chirp, error) {
+func (db *DB) CreateChirp(rc Chirp, uID int) (Chirp, error) {
 	db.mux.Lock()
 	defer db.mux.Unlock()
 
@@ -38,15 +38,10 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 
 	id := len(dbS.Chirps) + 1
 
-	req := Chirp{}
-	err = json.Unmarshal([]byte(body), &req)
-	if err != nil {
-		return Chirp{}, errors.New("unmarshall error")
-	}
-
 	chp := Chirp{
-		ID:   id,
-		Body: req.Body,
+		ID:     id,
+		Body:   rc.Body,
+		UserID: uID,
 	}
 
 	dbS.Chirps[id] = chp
@@ -68,7 +63,7 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 		return nil, err
 	}
 
-	chirps := make([]Chirp, len(dbS.Chirps))
+	chirps := make([]Chirp, 0, len(dbS.Chirps))
 	for _, chirp := range dbS.Chirps {
 		chirps = append(chirps, chirp)
 	}

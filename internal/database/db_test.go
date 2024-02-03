@@ -91,7 +91,10 @@ func TestCreateChirp(t *testing.T) {
 		"body": "Hello, world!"
 	}`
 
-	_, err = db.CreateChirp(body)
+	chp := Chirp{
+		Body: body,
+	}
+	_, err = db.CreateChirp(chp, 69)
 	if err != nil {
 		t.Error(err)
 	}

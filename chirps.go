@@ -8,49 +8,65 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/hatrnuhn/rssagg/internal/auth"
 	"github.com/hatrnuhn/rssagg/internal/database"
 )
 
-// TODO: create a handleFunc that handles GET to /api/chirps
-// TODO: only allows users create chirps as long as they're authenticated
-// TODO: how to store authentication??
-// TODO: associates new chirps to users who created them
-
-// accepts and store a chirp POST and responds with a newly stored chirp
+// requires body and authorization header, authenticates, then accepts and store a chirp POST and responds with a newly stored chirp with its associated author UserID
 func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-
-	dat, err := io.ReadAll(r.Body)
+	aToken, err := auth.ParseReq(r, cfg.jwtSecret)
 	if err != nil {
-		respondWithError(w, 500, "couldn't read request")
+		respondWithError(w, http.StatusInternalServerError, "couldn't parse from header")
 		return
 	}
 
-	// authentication check -----
-	// retrieve atoken from db
+	if claims, ok := aToken.Claims.(*jwt.RegisteredClaims); ok {
+		if claims.Issuer != "chirpy-access" {
+			respondWithError(w, http.StatusUnauthorized, "invalid AJWT")
+			return
+		}
+		if !ok {
+			respondWithError(w, http.StatusUnauthorized, "AJWT expired")
+			return
+		}
 
-	// check atoken validity
-	// use data from atoken to get userid and to associate new chirp
+		dat, err := io.ReadAll(r.Body)
+		if err != nil {
+			respondWithError(w, 500, "couldn't read request")
+			return
+		}
 
-	req := database.Chirp{}
-	err = json.Unmarshal(dat, &req)
-	if err != nil {
-		respondWithError(w, 500, "couldn't unmarshal request")
-		return
+		req := database.Chirp{}
+		err = json.Unmarshal(dat, &req)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "couldn't unmarshal request")
+			return
+		}
+
+		if len(req.Body) > 140 {
+			respondWithError(w, http.StatusBadRequest, "Chirp is too long!")
+			return
+		}
+
+		uID, err := strconv.Atoi(claims.Subject)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "couldn't read ID off token")
+			return
+		}
+
+		newC, err := cfg.db.CreateChirp(req, uID)
+		if err != nil {
+			respondWithError(w, 500, "couldn't create chirp")
+			return
+		}
+
+		respondWithJSON(w, 201, newC)
+
+	} else {
+		respondWithError(w, http.StatusUnauthorized, "please authenticate with the associated user")
 	}
-
-	if len(req.Body) > 140 {
-		respondWithError(w, 400, "Chirp is too long!")
-		return
-	}
-
-	newC, err := cfg.db.CreateChirp(string(dat))
-	if err != nil {
-		respondWithError(w, 500, "couldn't create chirp")
-		return
-	}
-
-	respondWithJSON(w, 201, newC)
 }
 
 // responds with all chirps stored in database

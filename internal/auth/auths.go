@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// parses any AJWT or RJWT from Authorization: Bearer {JWT} request header
 func ParseReq(r *http.Request, jwtSecret string) (*jwt.Token, error) {
 	authHead := r.Header.Get("Authorization")
 	if !strings.HasPrefix(authHead, "Bearer ") {
