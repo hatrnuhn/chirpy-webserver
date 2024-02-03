@@ -106,3 +106,74 @@ func (cfg *apiConfig) handleChirpID(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, 200, cps[id-1])
 }
+
+func (cfg *apiConfig) handleDelChirpID(w http.ResponseWriter, r *http.Request) {
+	param := chi.URLParam(r, "chirpID")
+	id, err := strconv.Atoi(param)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "bad url")
+		return
+	}
+	// authenticate user
+	aToken, err := auth.ParseReq(r, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "couldn't parse token off request")
+		return
+	}
+
+	if claims, ok := aToken.Claims.(*jwt.RegisteredClaims); ok {
+		uID, err := strconv.Atoi(claims.Subject)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "couldn't get ID off token")
+			return
+		}
+
+		if claims.Issuer != "chirpy-access" {
+			respondWithError(w, http.StatusUnauthorized, "invalid AJWT")
+			return
+		}
+
+		if !ok {
+			respondWithError(w, http.StatusUnauthorized, "AJWT expired")
+			return
+		}
+
+		// check if id exists
+		cs, err := cfg.db.GetChirps()
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "couldn't read db")
+			return
+		}
+
+		found := false
+		var chirp database.Chirp
+		for _, c := range cs {
+			if id == c.ID {
+				found = true
+				chirp = c
+				break
+			}
+		}
+
+		if !found {
+			respondWithError(w, http.StatusNotFound, fmt.Sprintf("ChirpID: %d doesn't exist", id))
+			return
+		}
+
+		// check if id and userid are associated
+		if chirp.UserID != uID {
+			respondWithError(w, http.StatusForbidden, "Chirp and user are not associated")
+			return
+		}
+
+	}
+	// delete chirp at id and write new db
+	err = cfg.db.DeleteChirp(id)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "couldn't delete associated chirp")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}

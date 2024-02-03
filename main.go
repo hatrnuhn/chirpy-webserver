@@ -65,6 +65,7 @@ func main() {
 	rAPI.Post("/users", apiCfg.handlePostUsers)
 	rAPI.Put("/users", apiCfg.handlePutUsers)
 	rAPI.Get("/chirps/{chirpID}", apiCfg.handleChirpID)
+	rAPI.Delete("/chirps/{chirpID}", apiCfg.handleDelChirpID)
 	rAPI.Post("/login", apiCfg.handlePostLogin)
 	rAPI.Post("/refresh", apiCfg.handlePostRefresh)
 	rAPI.Post("/revoke", apiCfg.handlePostRevoke)
