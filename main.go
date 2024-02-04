@@ -69,6 +69,7 @@ func main() {
 	rAPI.Post("/login", apiCfg.handlePostLogin)
 	rAPI.Post("/refresh", apiCfg.handlePostRefresh)
 	rAPI.Post("/revoke", apiCfg.handlePostRevoke)
+	rAPI.Post("/polka/webhooks", apiCfg.handlePostPolkaWebhooks)
 
 	rAdmin.Get("/metrics", apiCfg.handleMetrics)
 

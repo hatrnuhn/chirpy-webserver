@@ -172,9 +172,10 @@ func (db *DB) CreateUser(body string) (User, error) {
 	}
 
 	u := User{
-		ID:       id,
-		Email:    req.Email,
-		Password: string(hash),
+		ID:          id,
+		Email:       req.Email,
+		Password:    string(hash),
+		IsChirpyRed: false,
 	}
 
 	dbS.Users[id] = u
@@ -207,7 +208,7 @@ func (db *DB) GetUsers() ([]User, error) {
 	return users, nil
 }
 
-func (db *DB) UpdateUser(user *User) (User, error) {
+func (db *DB) UpdateUser(user *User, newPw bool) (User, error) {
 	db.mux.Lock()
 	defer db.mux.Unlock()
 
@@ -218,12 +219,13 @@ func (db *DB) UpdateUser(user *User) (User, error) {
 		return User{}, err
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return User{}, err
+	if newPw {
+		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return User{}, err
+		}
+		user.Password = string(hash)
 	}
-
-	user.Password = string(hash)
 
 	dbS.Users[id] = *user
 	err = db.writeDB(dbS)

@@ -98,14 +98,16 @@ func (cfg *apiConfig) handlePostLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, 200, struct {
-		ID     int    `json:"id"`
-		Email  string `json:"email"`
-		AToken string `json:"access_token"`
-		RToken string `json:"refresh_token"`
+		ID          int    `json:"id"`
+		Email       string `json:"email"`
+		AToken      string `json:"access_token"`
+		RToken      string `json:"refresh_token"`
+		IsChirpyRed bool   `json:"is_chirpy_red"`
 	}{
-		ID:     user.ID,
-		Email:  user.Email,
-		AToken: aToken,
-		RToken: rToken,
+		ID:          user.ID,
+		Email:       user.Email,
+		AToken:      aToken,
+		RToken:      rToken,
+		IsChirpyRed: user.IsChirpyRed,
 	})
 }

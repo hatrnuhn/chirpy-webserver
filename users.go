@@ -22,8 +22,9 @@ func (cfg *apiConfig) handlePostUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := struct {
-		ID    int    `json:"id"`
-		Email string `json:"email"`
+		ID          int    `json:"id"`
+		Email       string `json:"email"`
+		IsChirpyRed bool   `json:"is_chirpy_red"`
 	}{}
 	err = json.Unmarshal(dat, &req)
 	if err != nil {
@@ -117,7 +118,7 @@ func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 
 		req.ID = id
 
-		resp, err := cfg.db.UpdateUser(&req)
+		resp, err := cfg.db.UpdateUser(&req, true)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("couldn't update : %s", err.Error()))
 			return
