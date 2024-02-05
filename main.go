@@ -16,7 +16,7 @@ type apiConfig struct {
 	fileserverHits int
 	jwtSecret      string
 	db             *database.DB
-	// auth           *auth.Authentication
+	polka          map[string]any
 }
 
 func main() {
@@ -43,10 +43,11 @@ func main() {
 	apiCfg := apiConfig{
 		fileserverHits: 0,
 		jwtSecret:      jwtSecret,
+		polka:          make(map[string]any),
 	}
+	apiCfg.polka["polkakey"] = os.Getenv("POLKA_KEY")
 
 	var err error
-
 	apiCfg.db, err = database.NewDB(os.Getenv("DBPATH"))
 	if err != nil {
 		log.Fatal("couldn't initialize database")

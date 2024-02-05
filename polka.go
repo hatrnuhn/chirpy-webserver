@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hatrnuhn/rssagg/internal/auth"
 	"github.com/hatrnuhn/rssagg/internal/database"
 	"github.com/hatrnuhn/rssagg/internal/webhooks"
 )
@@ -12,6 +13,17 @@ import (
 func (cfg *apiConfig) handlePostPolkaWebhooks(w http.ResponseWriter, r *http.Request) {
 	// read and parse request json
 	defer r.Body.Close()
+
+	ApiKey, err := auth.GetAuthHeadToken(r, "ApiKey")
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized webhook request")
+		return
+	}
+
+	if ApiKey != cfg.polka["polkakey"] {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized webhook request")
+		return
+	}
 
 	dat, err := io.ReadAll(r.Body)
 	if err != nil {
