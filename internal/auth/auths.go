@@ -10,9 +10,9 @@ import (
 )
 
 // parses any AJWT or RJWT from Authorization: Bearer {JWT} request header
-func ParseReq(r *http.Request, jwtSecret string) (*jwt.Token, error) {
+func ParseReq(r *http.Request, jwtSecret string, scheme string) (*jwt.Token, error) {
 	authHead := r.Header.Get("Authorization")
-	if !strings.HasPrefix(authHead, "Bearer ") {
+	if !strings.HasPrefix(authHead, scheme+" ") {
 		return nil, errors.New("invalid auth header")
 	}
 

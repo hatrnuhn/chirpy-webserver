@@ -16,7 +16,7 @@ import (
 // requires body and authorization header, authenticates, then accepts and store a chirp POST and responds with a newly stored chirp with its associated author UserID
 func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	aToken, err := auth.ParseReq(r, cfg.jwtSecret)
+	aToken, err := auth.ParseReq(r, cfg.jwtSecret, "Bearer")
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "couldn't parse from header")
 		return
@@ -115,7 +115,7 @@ func (cfg *apiConfig) handleDelChirpID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// authenticate user
-	aToken, err := auth.ParseReq(r, cfg.jwtSecret)
+	aToken, err := auth.ParseReq(r, cfg.jwtSecret, "Bearer")
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "couldn't parse token off request")
 		return

@@ -11,7 +11,7 @@ import (
 
 // refreshes access token using refresh token
 func (cfg *apiConfig) handlePostRefresh(w http.ResponseWriter, r *http.Request) {
-	rToken, err := auth.ParseReq(r, cfg.jwtSecret)
+	rToken, err := auth.ParseReq(r, cfg.jwtSecret, "Bearer")
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, err.Error())
 		return

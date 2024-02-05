@@ -64,7 +64,7 @@ func (cfg *apiConfig) handlePostUsers(w http.ResponseWriter, r *http.Request) {
 func (cfg *apiConfig) handlePutUsers(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	token, err := auth.ParseReq(r, cfg.jwtSecret)
+	token, err := auth.ParseReq(r, cfg.jwtSecret, "Bearer")
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, err.Error())
 		return

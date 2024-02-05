@@ -11,7 +11,7 @@ import (
 
 func (cfg *apiConfig) handlePostRevoke(w http.ResponseWriter, r *http.Request) {
 	// reads rToken from Header
-	rToken, err := auth.ParseReq(r, cfg.jwtSecret)
+	rToken, err := auth.ParseReq(r, cfg.jwtSecret, "Bearer")
 
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, err.Error())
