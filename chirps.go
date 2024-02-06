@@ -72,6 +72,8 @@ func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 func (cfg *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 	authIDS := r.URL.Query().Get("author_id")
 	sortS := r.URL.Query().Get("sort")
+	var chirps []database.Chirp
+	var err error
 
 	if authIDS != "" {
 		AuthID, err := strconv.Atoi(authIDS)
@@ -79,46 +81,17 @@ func (cfg *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "invalid url")
 			return
 		}
-
-		var chirps *[]database.Chirp
-		if sortS == "desc" {
-			cs, err := cfg.db.GetChirpsByAuthID(AuthID, sortS)
-			if err != nil {
-				respondWithError(w, http.StatusInternalServerError, "couldn't get chirps from db")
-				return
-			}
-			chirps = &cs
-
-		} else {
-			cs, err := cfg.db.GetChirpsByAuthID(AuthID, sortS)
-			if err != nil {
-				respondWithError(w, http.StatusInternalServerError, "couldn't get chirps from db")
-				return
-			}
-			chirps = &cs
-		}
-
-		respondWithJSON(w, http.StatusOK, *chirps)
+		chirps, err = cfg.db.GetChirpsByAuthID(AuthID, sortS)
 	} else {
-		var chirps *[]database.Chirp
-		if sortS == "desc" {
-			cs, err := cfg.db.GetChirps(sortS)
-			if err != nil {
-				respondWithError(w, http.StatusInternalServerError, "couldn't get chirps")
-				return
-			}
-			chirps = &cs
-		} else {
-			cs, err := cfg.db.GetChirps(sortS)
-			if err != nil {
-				respondWithError(w, http.StatusInternalServerError, "couldn't get chirps")
-				return
-			}
-			chirps = &cs
-		}
-
-		respondWithJSON(w, http.StatusOK, *chirps)
+		chirps, err = cfg.db.GetChirps(sortS)
 	}
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "couldn't get chirps")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, chirps)
 }
 
 // handles /chirps/{chirpID} endpoints
