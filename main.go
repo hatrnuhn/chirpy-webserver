@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi"
-	"github.com/hatrnuhn/rssagg/internal/database"
+	"github.com/hatrnuhn/chirpy-webserver/internal/database"
 	"github.com/joho/godotenv"
 )
 

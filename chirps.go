@@ -9,8 +9,8 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/hatrnuhn/rssagg/internal/auth"
-	"github.com/hatrnuhn/rssagg/internal/database"
+	"github.com/hatrnuhn/chirpy-webserver/internal/auth"
+	"github.com/hatrnuhn/chirpy-webserver/internal/database"
 )
 
 // requires body and authorization header, authenticates, then accepts and store a chirp POST and responds with a newly stored chirp with its associated author UserID

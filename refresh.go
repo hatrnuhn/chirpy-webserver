@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/hatrnuhn/rssagg/internal/auth"
+	"github.com/hatrnuhn/chirpy-webserver/internal/auth"
 )
 
 // refreshes access token using refresh token

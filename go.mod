@@ -1,4 +1,4 @@
-module github.com/hatrnuhn/rssagg
+module github.com/hatrnuhn/chirpy-webserver
 
 go 1.21.5
 

@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/hatrnuhn/rssagg/internal/auth"
-	"github.com/hatrnuhn/rssagg/internal/database"
+	"github.com/hatrnuhn/chirpy-webserver/internal/auth"
+	"github.com/hatrnuhn/chirpy-webserver/internal/database"
 )
 
 func (cfg *apiConfig) handlePostUsers(w http.ResponseWriter, r *http.Request) {

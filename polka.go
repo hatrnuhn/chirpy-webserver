@@ -5,9 +5,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hatrnuhn/rssagg/internal/auth"
-	"github.com/hatrnuhn/rssagg/internal/database"
-	"github.com/hatrnuhn/rssagg/internal/webhooks"
+	"github.com/hatrnuhn/chirpy-webserver/internal/auth"
+	"github.com/hatrnuhn/chirpy-webserver/internal/database"
+	"github.com/hatrnuhn/chirpy-webserver/internal/webhooks"
 )
 
 func (cfg *apiConfig) handlePostPolkaWebhooks(w http.ResponseWriter, r *http.Request) {

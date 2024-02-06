@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hatrnuhn/rssagg/internal/auth"
-	"github.com/hatrnuhn/rssagg/internal/database"
+	"github.com/hatrnuhn/chirpy-webserver/internal/auth"
+	"github.com/hatrnuhn/chirpy-webserver/internal/database"
 	"golang.org/x/crypto/bcrypt"
 )
 
