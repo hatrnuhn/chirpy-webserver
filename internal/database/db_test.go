@@ -66,7 +66,7 @@ func TestGetChirps(t *testing.T) {
 		})
 	}
 
-	chpsAct, err := db.GetChirps()
+	chpsAct, err := db.GetChirps("asc")
 	if err != nil {
 		t.Error(err)
 	}

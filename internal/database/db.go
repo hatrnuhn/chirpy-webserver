@@ -73,7 +73,7 @@ func (db *DB) DeleteChirp(id int) error {
 }
 
 // returns a slice of Chirps in db sorted by ID
-func (db *DB) GetChirps() ([]Chirp, error) {
+func (db *DB) GetChirps(order string) ([]Chirp, error) {
 	db.mux.RLock()
 	defer db.mux.RUnlock()
 
@@ -87,17 +87,24 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 		chirps = append(chirps, chirp)
 	}
 
-	sort.Slice(chirps, func(i, j int) bool {
-		return chirps[i].ID < chirps[j].ID
-	})
+	if order == "desc" {
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].ID > chirps[j].ID
+		})
+	} else {
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].ID < chirps[j].ID
+		})
+
+	}
 	return chirps, nil
 }
 
-func (db *DB) GetChirpsByAuthID(aID int) ([]Chirp, error) {
+func (db *DB) GetChirpsByAuthID(aID int, order string) ([]Chirp, error) {
 	db.mux.RLock()
 	defer db.mux.RUnlock()
 
-	cs, err := db.GetChirps()
+	cs, err := db.GetChirps(order)
 	if err != nil {
 		return nil, err
 	}
