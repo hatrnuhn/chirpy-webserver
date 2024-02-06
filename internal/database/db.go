@@ -72,7 +72,7 @@ func (db *DB) DeleteChirp(id int) error {
 	return nil
 }
 
-// GetChirps returns all chirps in the database
+// returns a slice of Chirps in db sorted by ID
 func (db *DB) GetChirps() ([]Chirp, error) {
 	db.mux.RLock()
 	defer db.mux.RUnlock()
@@ -91,6 +91,25 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 		return chirps[i].ID < chirps[j].ID
 	})
 	return chirps, nil
+}
+
+func (db *DB) GetChirpsByAuthID(aID int) ([]Chirp, error) {
+	db.mux.RLock()
+	defer db.mux.RUnlock()
+
+	cs, err := db.GetChirps()
+	if err != nil {
+		return nil, err
+	}
+
+	csByUID := make([]Chirp, 0)
+	for _, c := range cs {
+		if c.UserID == aID {
+			csByUID = append(csByUID, c)
+		}
+	}
+
+	return csByUID, nil
 }
 
 // ensureDB creates a new database file if it doesn't exist

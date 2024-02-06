@@ -63,7 +63,6 @@ func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 		}
 
 		respondWithJSON(w, 201, newC)
-
 	} else {
 		respondWithError(w, http.StatusUnauthorized, "please authenticate with the associated user")
 	}
@@ -71,13 +70,29 @@ func (cfg *apiConfig) handlePostChirps(w http.ResponseWriter, r *http.Request) {
 
 // responds with all chirps stored in database
 func (cfg *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
-	chirps, err := cfg.db.GetChirps()
-	if err != nil {
-		respondWithError(w, 500, "couldn't get chirps")
-		return
-	}
+	s := r.URL.Query().Get("author_id")
 
-	respondWithJSON(w, 200, chirps)
+	if s != "" {
+		AuthID, err := strconv.Atoi(s)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid url")
+			return
+		}
+
+		cs, err := cfg.db.GetChirpsByAuthID(AuthID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "couldn't get chirps from db")
+			return
+		}
+		respondWithJSON(w, http.StatusOK, cs)
+	} else {
+		chirps, err := cfg.db.GetChirps()
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "couldn't get chirps")
+			return
+		}
+		respondWithJSON(w, http.StatusOK, chirps)
+	}
 }
 
 // handles /chirps/{chirpID} endpoints
@@ -85,26 +100,26 @@ func (cfg *apiConfig) handleChirpID(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "chirpID")
 	id, err := strconv.Atoi(param)
 	if err != nil {
-		respondWithError(w, 400, err.Error())
+		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if id == 0 {
-		respondWithError(w, 400, "chirp id starts at 1")
+		respondWithError(w, http.StatusBadRequest, "chirp id starts at 1")
 		return
 	}
 
 	cps, err := cfg.db.GetChirps()
 	if err != nil {
-		respondWithError(w, 500, "couldn't get chirps")
+		respondWithError(w, http.StatusInternalServerError, "couldn't get chirps")
 		return
 	}
 
 	if id > len(cps) {
-		respondWithError(w, 404, fmt.Sprintf("chirp with id: %v is not found", id))
+		respondWithError(w, http.StatusNotFound, fmt.Sprintf("chirp with id: %v is not found", id))
 		return
 	}
 
-	respondWithJSON(w, 200, cps[id-1])
+	respondWithJSON(w, http.StatusOK, cps[id-1])
 }
 
 func (cfg *apiConfig) handleDelChirpID(w http.ResponseWriter, r *http.Request) {
